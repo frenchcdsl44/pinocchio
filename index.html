@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		 <meta charset="utf-8">
+		 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+		 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+		 <style>
+		   html,
+		   body,
+			#page {
+		      margin: 0;
+		      padding: 0;
+			 	height: 100%;
+		   }
+		   #tip {
+		   	height:20px;
+		   	color:white;	
+		   	 margin: 10px 100px;
+		   }
+		   .showcircles #tip {
+		   	color:black;	
+		   }
+			.showcircles .sjx-svg-hdl-rotator {
+				r:10;
+			}
+			.showcircles circle.manip {
+				display:block;
+			}
+			circle.manip {
+				display:none;
+			}
+			.showcircles .sjx-svg-wrapper {
+				opacity:0;
+			}
+
+		
+			/* Colors: display (blue) */
+			.toggle-radio {background:#00ff00; border:1px solid #ccc;}
+			.toggle-radio > input:checked + label {background:#00aa00;}
+			.toggle-radio > input + label:not(:last-of-type) {border-right:1px solid #ccc;}
+
+			/* Rounded corners */
+			.toggle-radio {border-radius:6px; margin: 10px 100px;}
+
+			.toggle-radio {display:inline-flex;}
+			.toggle-radio > input[type='radio'] {display:none;}
+			.toggle-radio > input[disabled] + label {opacity:0.50;}
+			.toggle-radio > input[disabled] + label:hover {cursor:not-allowed;}
+			.toggle-radio > input + label {display:inline-block; margin-bottom:0; padding:5px 10px; float:left; cursor:pointer;}
+
+			/* Transitions */
+			.toggle-radio > input:checked + label {transition:background 300ms linear;}
+			
+
+
+		 </style>
+		 <script src="subjx.dev.js" type="text/javascript" charset="utf-8"></script>
+		 <title>Demo</title>
+	</head>
+
+	<body>
+	
+		<form name="formA" class="toggle-radio">
+		  <input type="radio" name="display" id="display_Option1" value="Option1" checked>
+		  <label for="display_Option1">Manipulate</label>
+
+		  <input type="radio" name="display" id="display_Option2" value="Option2">
+		  <label for="display_Option2">Move and resize</label>
+
+		  <input type="radio" name="display" id="display_Option3" value="Option3">
+		  <label for="display_Option3">Hide handles</label>
+		</form>
+
+
+		<div id="page" class="showcircles">
+			<div id="tip">Drag the black circles</div>
+			<div id="drawing">
+
+			</div>
+		</div>
+	 
+	</body>
+
+	<script>
+
+			let svgs = {};
+			let subjed;
+			const pagediv =  document.getElementById('page');
+			let radios = document.forms["formA"].elements["display"];
+			for(let i = 0, max = radios.length; i < max; i++) {
+				radios[i].onclick = function() {
+				
+
+				 
+				 
+					for (let key in points) {
+						svgs[key].disable();
+					}
+				
+					if (this.value == 'Option1') {
+						pagediv.classList.add("showcircles");
+						draw();
+						if (subjed) subjed.disable();
+					} else if (this.value == 'Option2') {
+						pagediv.classList.remove("showcircles");
+						subjed = subjx('#body').drag({proportions:true});
+					} else {
+						pagediv.classList.remove("showcircles");
+						if (subjed) subjed.disable();
+					}
+				}
+			}
+					
+		
+			let request = new XMLHttpRequest();
+			request.open("GET", 'pinicchio.svg', false);
+			request.send(null);
+			document.getElementById('drawing').innerHTML = request.responseText;
+
+			const points = {
+				"g-r-lowerarm" : {
+					rotator: "r-elbow",
+					handle:	"r-wrist"
+				},
+				"g-r-upperarm" : {
+					rotator: "r-shoulder",
+					handle:	"r-elbow"
+				},
+				"g-l-lowerarm" : {
+					rotator: "l-elbow",
+					handle:	"l-wrist"
+				},
+				"g-l-upperarm" : {
+					rotator: "l-shoulder",
+					handle:	"l-elbow"
+				},
+				
+				"g-r-lowerleg" : {
+					rotator: "r-knee",
+					handle:	"r-ankle"
+				},
+				"g-r-upperleg" : {
+					rotator: "r-pelvis",
+					handle:	"r-knee"
+				},
+				"g-l-lowerleg" : {
+					rotator: "l-knee",
+					handle:	"l-ankle"
+				},
+				"g-l-upperleg" : {
+					rotator: "l-pelvis",
+					handle:	"l-knee"
+				},
+				"skull" : {
+					rotator: "cervical",
+					handle:	"hat"
+				}
+
+			}
+
+			const methods = {
+				onInit(element) {
+				   //console.log('init');
+					//console.log(this);
+					//var bBox = this.elements[0].getBBox();
+					//console.log(bBox);
+					//console.log(points)
+					const id = this.elements[0].id
+					if(points[id]){					
+						const rotator = transformedBoundingBox( document.getElementById(points[id].rotator) );
+						//const handle = transformedBoundingBox( document.getElementById(points[id].handle) );
+						
+						const handle = this.getBoundingRect(document.getElementById(points[id].handle))
+						
+						//console.log(handle);
+						
+						const rotx = rotator.x + (rotator.width/2);
+						const roty = rotator.y + (rotator.height/2);
+						//document.getElementById("lax").innerHTML = rotx;
+						//document.getElementById("lay").innerHTML = roty;
+						
+						
+						this.setCenterPoint({x: rotx, y: roty}, false);
+						
+						
+						//this.storage.handles.rotator.setAttribute("cx", handle.x + (handle.width/2));
+						//this.storage.handles.rotator.setAttribute("cy", handle.y + (handle.height/2));
+						this.storage.handles.rotator.setAttribute("cx", handle[0][0]+ (handle[2][0]-handle[0][0])/2 );
+						this.storage.handles.rotator.setAttribute("cy", handle[0][1]+ (handle[2][1]-handle[0][1])/2 );
+					}
+
+
+				},
+				onMove() {
+					// console.log(arguments);
+				},
+				onResize(dx, dy, handle) {
+					//console.log(handle);
+				},
+				onRotate(rad) {
+					//console.log('is rotating');
+				},
+				onDrop(e) {
+					//console.log('is dropped');
+				//this.setCenterPoint( 1000,10, false, false,false)	  
+				//this.setCenterPoint({x:0, y:0, dx:-15, dy:0},false);
+
+				//this.setCenterPoint({dx:100, dy:20},false);
+					draw();
+				},
+				onDestroy(elements) {
+					//console.log('is destroyed');
+				}
+			};
+
+			const svgOptions = {
+				container: '#svg-container',
+				rotatorAnchor: 'e',
+				rotatorOffset: -10,
+				resizable: false,
+				draggable: false,
+				//proportions: true,
+				snap: {
+				 x: 1,
+				 y: 1,
+				 angle: 1
+				},
+				cursorMove: 'move',
+				cursorRotate: 'crosshair',
+				cursorResize: 'pointer',
+				//restrict: '#restrict',
+				//proportions: true,
+				rotationPoint: true,
+				//themeColor: 'white',
+				//scalable: true,
+				...methods
+			};
+
+			//const observable = subjx.createObservable();
+			 //const svg1 = subjx('.drag-svg').drag(svgOptions, observable);
+			 
+			
+
+			
+
+			function draw(){
+				//console.log(observable);
+				//observable.disable();
+				
+				for (var key in points) {
+				
+					//console.log(key);
+					
+					if(svgs[key]){
+						svgs[key].disable();
+					}
+					svgs[key] = subjx('#'+key).drag(svgOptions);
+				}
+	/*
+
+				if(llowerarm) llowerarm.disable();
+				if(lupperarm) lupperarm.disable();			
+				if(lowerarm) lowerarm.disable();
+				if(upperarm) upperarm.disable();			
+				//lowerarm = subjx('#g-r-lowerarm').drag(svgOptions, observable);
+				//upperarm = subjx('#g-r-upperarm').drag(svgOptions, observable);
+				llowerarm = subjx('#g-l-lowerarm').drag(svgOptions);
+				lupperarm = subjx('#g-l-upperarm').drag(svgOptions);
+				rlowerarm = subjx('#g-r-lowerarm').drag(svgOptions);
+				rupperarm = subjx('#g-r-upperarm').drag(svgOptions);
+				*/
+			}
+			draw();
+		
+		
+				// Calculate the bounding box of an element with respect to its parent element
+				//from https://stackoverflow.com/questions/10623809/get-bounding-box-of-element-accounting-for-its-transform
+			function transformedBoundingBox(el){
+			  var bb  = el.getBBox(),
+					svg = el.ownerSVGElement,
+					//m   = el.getTransformToElement(el.parentNode);
+					m   = el.parentNode.getScreenCTM().inverse().multiply( el.getScreenCTM() )
+
+
+			  // Create an array of all four points for the original bounding box
+			  var pts = [
+				 svg.createSVGPoint(), svg.createSVGPoint(),
+				 svg.createSVGPoint(), svg.createSVGPoint()
+			  ];
+			  pts[0].x=bb.x;          pts[0].y=bb.y;
+			  pts[1].x=bb.x+bb.width; pts[1].y=bb.y;
+			  pts[2].x=bb.x+bb.width; pts[2].y=bb.y+bb.height;
+			  pts[3].x=bb.x;          pts[3].y=bb.y+bb.height;
+
+			  // Transform each into the space of the parent,
+			  // and calculate the min/max points from that.    
+			  var xMin=Infinity,xMax=-Infinity,yMin=Infinity,yMax=-Infinity;
+			  pts.forEach(function(pt){
+				 pt = pt.matrixTransform(m);
+				 xMin = Math.min(xMin,pt.x);
+				 xMax = Math.max(xMax,pt.x);
+				 yMin = Math.min(yMin,pt.y);
+				 yMax = Math.max(yMax,pt.y);
+			  });
+
+			  // Update the bounding box with the new values
+			  bb.x = xMin; bb.width  = xMax-xMin;
+			  bb.y = yMin; bb.height = yMax-yMin;
+			  return bb;
+			}
+
+
+
+
+
+
+/**/
+
+
+
+	  
+	</script>
+
+</html>
