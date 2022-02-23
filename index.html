@@ -90,9 +90,6 @@
 			let radios = document.forms["formA"].elements["display"];
 			for(let i = 0, max = radios.length; i < max; i++) {
 				radios[i].onclick = function() {
-				
-
-				 
 				 
 					for (let key in points) {
 						svgs[key].disable();
@@ -112,11 +109,13 @@
 				}
 			}
 					
-		
+		/*
 			let request = new XMLHttpRequest();
 			request.open("GET", 'pinicchio.svg', false);
 			request.send(null);
-			document.getElementById('drawing').innerHTML = request.responseText;
+						document.getElementById('drawing').innerHTML = request.responseText;
+			*/
+
 
 			const points = {
 				"g-r-lowerarm" : {
@@ -167,23 +166,35 @@
 					//console.log(bBox);
 					//console.log(points)
 					const id = this.elements[0].id
-					if(points[id]){					
+					if(points[id]){	
+
+						//const rotator = this.getBoundingRect( document.getElementById(points[id].rotator) );
 						const rotator = transformedBoundingBox( document.getElementById(points[id].rotator) );
-						//const handle = transformedBoundingBox( document.getElementById(points[id].handle) );
 						
 						const handle = this.getBoundingRect(document.getElementById(points[id].handle))
-						
-						//console.log(handle);
-						
 						const rotx = rotator.x + (rotator.width/2);
 						const roty = rotator.y + (rotator.height/2);
-						//document.getElementById("lax").innerHTML = rotx;
-						//document.getElementById("lay").innerHTML = roty;
+						this.setTransformOrigin({x: rotx, y: roty}, false);
+						/*
+						console.log(document.getElementById(points[id].rotator));				
+						console.log(rotator);
 						
-						
-						this.setCenterPoint({x: rotx, y: roty}, false);
-						
-						
+						function calculateCenter(p) {
+
+							  // and calculate the min/max points from that.    
+							  var xMin=Infinity,xMax=-Infinity,yMin=Infinity,yMax=-Infinity;
+							  p.forEach(function(pt){
+								 xMin = Math.min(xMin,pt[0]);
+								 xMax = Math.max(xMax,pt[0]);
+								 yMin = Math.min(yMin,pt[1]);
+								 yMax = Math.max(yMax,pt[1]);
+							  });
+							return { x : xMin+ (xMax-xMin)/2, y : yMin+ (yMax-yMin)/2 };
+						}
+						const rotatorCoord = calculateCenter(rotator);			
+												console.log(rotatorCoord);
+						this.setTransformOrigin({x: rotatorCoord.x, y: rotatorCoord.y}, false);
+						*/
 						//this.storage.handles.rotator.setAttribute("cx", handle.x + (handle.width/2));
 						//this.storage.handles.rotator.setAttribute("cy", handle.y + (handle.height/2));
 						this.storage.handles.rotator.setAttribute("cx", handle[0][0]+ (handle[2][0]-handle[0][0])/2 );
@@ -271,8 +282,16 @@
 				rupperarm = subjx('#g-r-upperarm').drag(svgOptions);
 				*/
 			}
-			draw();
+			//draw();
+			async function getSVG() {
+				let x = await fetch('pinicchio.svg');
+				let y = await x.text();
+				document.getElementById('drawing').innerHTML = y;
+				draw();
+			}
+			getSVG();
 		
+
 		
 				// Calculate the bounding box of an element with respect to its parent element
 				//from https://stackoverflow.com/questions/10623809/get-bounding-box-of-element-accounting-for-its-transform
