@@ -6409,7 +6409,6 @@
           _this$options10 = _this$options10 === void 0 ? {} : _this$options10;
           var restrict = _this$options10.restrict,
               container = _this$options10.container;
-              console.log(arguments);
           var restrictEl = restrict || container;
           var nextTransform = transformMatrix ? getTransformToElement(element.parentNode, restrictEl).multiply(transformMatrix) : getTransformToElement(element, restrictEl);
           return _getBoundingRect$1(element, nextTransform, element.getBBox());
